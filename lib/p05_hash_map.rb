@@ -71,7 +71,7 @@ class HashMap
   end
 
   def resize!
-    new_array = Array.new(num_buckets * 2) { Array.new }
+    new_array = Array.new(num_buckets * 2) { LinkedList.new }
 
     temp_array = @store
     @store = new_array
