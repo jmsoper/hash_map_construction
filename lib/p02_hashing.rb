@@ -21,6 +21,7 @@ class Array
   end
 end
 
+
 class String
   def hash
     letters = self.split(//)

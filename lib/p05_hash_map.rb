@@ -2,6 +2,9 @@ require_relative 'p02_hashing'
 require_relative 'p04_linked_list'
 
 class HashMap
+
+  include Enumerable
+
   attr_reader :count
 
   def initialize(num_buckets = 8)
@@ -10,18 +13,44 @@ class HashMap
   end
 
   def include?(key)
+    @store[bucket(key)].include?(key)
   end
 
   def set(key, val)
+
+    if include?(key)
+      @store[bucket(key)].each do |link|
+        link.val = val if link.key == key
+      end
+    else
+      resize! if @count >= num_buckets
+      #this is where it breaks --
+      #"no implicit conversion of Symbol into Integer"
+      #possible problem with calling .hash on
+      #Symbol, but initial experiments proved problematic
+      @store[bucket(key)].insert(key, val)
+      @count += 1
+    end
   end
 
   def get(key)
+    @store[bucket(key)].get(key)
   end
 
   def delete(key)
+    @store[bucket(key)].remove(key)
+    @count -= 1
   end
 
-  def each
+  def each(&prc)
+    prc ||= Proc.new { |key, val| [key, val] }
+
+    @store.each do |bucket|
+      bucket.each do |link|
+        prc.call(link.key, link.val)
+      end
+    end
+
   end
 
   # uncomment when you have Enumerable included
@@ -42,9 +71,19 @@ class HashMap
   end
 
   def resize!
+    new_array = Array.new(num_buckets * 2) { Array.new }
+
+    temp_array = @store
+    @store = new_array
+    @count = 0
+    temp_array.each do |bucket|
+      bucket.each do |link|
+        set(link.key, link.val)
+      end
+    end
   end
 
   def bucket(key)
-    # optional but useful; return the bucket corresponding to `key`
+    key.hash % num_buckets
   end
 end
